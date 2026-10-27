@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Study & Routine Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        indigo: { 950: '#0b0f19', 900: '#111827', 800: '#1e1b4b', 600: '#4f46e5', 500: '#6366f1' },
+                        violet: { 500: '#8b5cf6', 600: '#7c3aed' },
+                    },
+                    fontFamily: {
+                        sans: ['Hind Siliguri', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Bengali & English -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Hind Siliguri', 'Inter', sans-serif;
+            background-color: #080c14;
+            color: #f1f5f9;
+        }
+        /* Glassmorphism Effect */
+        .glass-card {
+            background: rgba(22, 27, 46, 0.65);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-nav {
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Smartphone Mockup Frame styling */
+        .phone-frame {
+            max-width: 410px;
+            height: 850px;
+            margin: 15px auto;
+            border: 12px solid #1e293b;
+            border-radius: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 35px rgba(99, 102, 241, 0.25);
+            overflow: hidden;
+            position: relative;
+            background: #080c14;
+            display: flex;
+            flex-direction: column;
+        }
+        .phone-notch {
+            width: 140px;
+            height: 24px;
+            background: #1e293b;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            z-index: 100;
+        }
+        /* Bounce Animation for Funny Notification */
+        @keyframes floatBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.02); }
+        }
+        .animate-float-bounce {
+            animation: floatBounce 2.5s infinite ease-in-out;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #080c14; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Top View & Language Switcher Toolbar -->
+    <div class="bg-indigo-950/90 border-b border-indigo-900/60 py-2 px-4 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-semibold text-slate-300" data-i18n="app_title">স্টাডি ও রুটিন ট্র্যাকার</span>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <!-- Language Switcher -->
+                <button onclick="toggleLanguage()" class="bg-indigo-900/80 hover:bg-indigo-800 text-indigo-300 px-2.5 py-1 rounded-lg border border-indigo-500/30 font-bold flex items-center gap-1">
+                    <i class="fa-solid fa-globe text-indigo-400"></i>
+                    <span id="lang-indicator">BN / EN</span>
+                </button>
+
+                <!-- View Mode Toggle -->
+                <div class="flex items-center bg-slate-900/90 p-0.5 rounded-lg border border-slate-800">
+                    <button onclick="setPreviewMode('phone')" id="btn-mode-phone" class="px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-all text-indigo-400 bg-indigo-950 border border-indigo-500/30">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                        <span data-i18n="phone_view">ফোন ভিউ</span>
+                    </button>
+                    <button onclick="setPreviewMode('full')" id="btn-mode-full" class="px-2.5 py-1 rounded-md text-[11px] font-medium flex items-center gap-1 transition-all text-slate-400 hover:text-slate-200">
+                        <i class="fa-solid fa-desktop"></i>
+                        <span data-i18n="full_screen">ফুল স্ক্রিন</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="app-wrapper" class="phone-frame transition-all duration-300">
+
+        <!-- Phone Top Status Bar (Phone Mode) -->
+        <div id="phone-status-bar" class="phone-notch flex items-end justify-between px-6 pb-1 text-[10px] text-slate-400">
+            <span id="live-time">09:41</span>
+            <div class="flex items-center gap-1">
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-battery-full text-emerald-400"></i>
+            </div>
+        </div>
+
+        <!-- App Header Bar -->
+        <header class="glass-nav pt-7 pb-3 px-4 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="openProfileModal()">
+                <div class="relative">
+                    <div id="header-avatar" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-lg font-bold shadow-lg shadow-indigo-500/20 overflow-hidden">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+                </div>
+                <div>
+                    <h1 id="header-user-name" class="font-bold text-sm text-slate-100 leading-tight">মোহাম্মদ সাব্বির</h1>
+                    <p id="header-user-target" class="text-[10px] text-indigo-300/90">লক্ষ্য: GPA 5.00</p>
+                </div>
+            </div>
+
+            <!-- Header Action Buttons -->
+            <div class="flex items-center gap-2">
+                <div class="bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full flex items-center gap-1 text-amber-400 text-xs font-bold" title="Daily Streak">
+                    <i class="fa-solid fa-fire text-amber-500 animate-bounce"></i>
+                    <span id="streak-count">০</span>
+                </div>
+                <button onclick="openBackupModal()" class="p-2 text-slate-400 hover:text-slate-200 rounded-lg bg-slate-800/60 text-xs border border-slate-700/50">
+                    <i class="fa-solid fa-sliders"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- APP BODY SCROLLABLE AREA -->
+        <div class="flex-grow overflow-y-auto px-4 py-4 space-y-4">
+
+            <!-- PROFILE SUMMARY CARD -->
+            <div class="glass-card rounded-2xl p-3.5 border border-indigo-500/20 bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-900/60">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-id-card text-indigo-400"></i>
+                        <span class="text-xs font-bold text-slate-200" data-i18n="profile_summary">প্রোফাইল সামারি</span>
+                    </div>
+                    <button onclick="openProfileModal()" class="text-[10px] text-indigo-400 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="edit">এডিট</span>
+                    </button>
+                </div>
+                <p id="profile-bio-text" class="text-[11px] text-slate-300 italic mb-3">"নিয়মিত পড়ালেখা করে সেরা ফলাফল অর্জন করাই একমাত্র লক্ষ্য।"</p>
+                
+                <!-- Mini Stats Bar -->
+                <div class="grid grid-cols-3 gap-2 text-center pt-2 border-t border-slate-800/80">
+                    <div class="bg-slate-900/50 p-1.5 rounded-xl border border-slate-800">
+                        <p class="text-[9px] text-slate-400" data-i18n="completed_tasks">সম্পন্ন টাস্ক</p>
+                        <h4 id="stat-completed-tasks" class="text-sm font-bold text-emerald-400">০</h4>
+                    </div>
+                    <div class="bg-slate-900/50 p-1.5 rounded-xl border border-slate-800">
+                        <p class="text-[9px] text-slate-400" data-i18n="study_hours">স্টাডি টাইম</p>
+                        <h4 id="stat-study-hours" class="text-sm font-bold text-indigo-400">০ ঘঃ</h4>
+                    </div>
+                    <div class="bg-slate-900/50 p-1.5 rounded-xl border border-slate-800">
+                        <p class="text-[9px] text-slate-400" data-i18n="streak_days">স্ট্রিক দিন</p>
+                        <h4 id="stat-streak-days" class="text-sm font-bold text-amber-400">০ দিন</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FUNNY NOTIFICATION BANNER -->
+            <div class="glass-card rounded-2xl p-3 border border-amber-500/30 bg-gradient-to-r from-amber-950/20 via-indigo-950/30 to-rose-950/20 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-sm">
+                        <i class="fa-solid fa-face-grin-tears animate-float-bounce"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-bold text-amber-300" data-i18n="funny_reminder">ফানি স্টাডি রিমাইন্ডার</h3>
+                        <p class="text-[10px] text-slate-400" data-i18n="funny_sub">পড়া বাকি থাকলে অ্যালার্ট যাবে!</p>
+                    </div>
+                </div>
+                <button onclick="checkAndTriggerFunnyNotification(true)" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all shadow-md shadow-amber-500/20 flex items-center gap-1">
+                    <i class="fa-solid fa-bell"></i>
+                    <span data-i18n="check_now">চেক করুন</span>
+                </button>
+            </div>
+
+            <!-- STATS PROGRESS GRID -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="glass-card rounded-2xl p-3 relative">
+                    <p class="text-[10px] text-slate-400 font-medium" data-i18n="daily_study_goal">পড়ার টাস্ক প্রোগ্রেস</p>
+                    <h3 id="routine-progress-percent" class="text-xl font-bold text-indigo-400 my-0.5">০%</h3>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div id="routine-progress-bar" class="bg-indigo-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-3 relative">
+                    <p class="text-[10px] text-slate-400 font-medium" data-i18n="daily_todo_goal">দৈনন্দিন কাজ (To-Do)</p>
+                    <h3 id="todo-progress-percent" class="text-xl font-bold text-emerald-400 my-0.5">০%</h3>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div id="todo-progress-bar" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POMODORO TIMER MODULE -->
+            <div class="glass-card rounded-2xl p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-950/40 to-slate-900/60">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-stopwatch text-violet-400"></i>
+                        <span class="text-xs font-bold text-slate-200" id="timer-mode-label" data-i18n="focus_session">ফোকাস স্টাডি সেশন</span>
+                    </div>
+                    <span id="pomo-sessions-count" class="text-[10px] px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 font-semibold">সেশন: ০</span>
+                </div>
+
+                <div class="text-center py-1">
+                    <div id="timer-display" class="text-3xl font-extrabold font-mono tracking-wider text-slate-100">২৫:০০</div>
+                    <p class="text-[10px] text-slate-400 mt-1" id="timer-status-hint" data-i18n="timer_hint">২৫ মিনিট পড়াশোনা, ৫ মিনিট বিরতি</p>
+                </div>
+
+                <div class="flex items-center justify-center gap-3 mt-2.5">
+                    <button onclick="toggleTimer()" id="btn-timer-start" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-600/30 flex items-center gap-1.5">
+                        <i class="fa-solid fa-play" id="timer-icon"></i>
+                        <span id="timer-btn-text" data-i18n="start">শুরু করুন</span>
+                    </button>
+                    <button onclick="resetTimer()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-semibold">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- NAVIGATION TABS SWITCHER -->
+            <div class="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
+                <button onclick="switchTab('routine')" id="tab-btn-routine" class="tab-btn flex-1 py-1.5 rounded-lg font-semibold text-indigo-400 bg-indigo-950 border border-indigo-500/30 transition-all text-center" data-i18n="routine">
+                    রুটিন
+                </button>
+                <button onclick="switchTab('todo')" id="tab-btn-todo" class="tab-btn flex-1 py-1.5 rounded-lg font-medium text-slate-400 transition-all text-center" data-i18n="todo">
+                    টু-ডু
+                </button>
+                <button onclick="switchTab('subjects')" id="tab-btn-subjects" class="tab-btn flex-1 py-1.5 rounded-lg font-medium text-slate-400 transition-all text-center" data-i18n="syllabus">
+                    সিলেবাস
+                </button>
+            </div>
+
+            <!-- TAB 1: DAILY ROUTINE -->
+            <section id="section-routine" class="tab-content space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-open text-indigo-400"></i>
+                        <span data-i18n="todays_routine">আজকের পড়ার টাস্ক</span>
+                    </h2>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openRoutineModal()" class="text-[11px] bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded-lg flex items-center gap-1 font-semibold">
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="add">যোগ করুন</span>
+                        </button>
+                        <button onclick="resetDailyRoutine()" title="Reset All Tasks" class="text-xs bg-slate-800 text-slate-400 hover:text-slate-200 px-2 py-1 rounded-lg border border-slate-700">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Filters -->
+                <div class="flex gap-1.5 text-[10px]">
+                    <button onclick="filterRoutine('all')" id="rf-all" class="px-2.5 py-1 rounded-md bg-slate-800 text-slate-200 font-semibold border border-slate-700" data-i18n="filter_all">সব</button>
+                    <button onclick="filterRoutine('pending')" id="rf-pending" class="px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 border border-slate-800" data-i18n="filter_pending">বাকি</button>
+                    <button onclick="filterRoutine('completed')" id="rf-completed" class="px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 border border-slate-800" data-i18n="filter_completed">সম্পন্ন</button>
+                </div>
+
+                <div id="routine-list" class="space-y-2">
+                    <!-- Dynamic Items -->
+                </div>
+            </section>
+
+            <!-- TAB 2: DAILY TODO LIST -->
+            <section id="section-todo" class="tab-content hidden space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-check text-emerald-400"></i>
+                        <span data-i18n="daily_chores">দৈনন্দিন সাধারণ কাজ</span>
+                    </h2>
+                </div>
+
+                <form onsubmit="handleAddTodo(event)" class="flex gap-2">
+                    <input type="text" id="todo-input" data-i18n-ph="todo_ph" placeholder="নতুন কাজ লিখুন..." required
+                        class="flex-1 bg-slate-900 border border-slate-700 text-slate-100 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </form>
+
+                <div id="todo-list" class="space-y-2">
+                    <!-- Dynamic To-dos -->
+                </div>
+            </section>
+
+            <!-- TAB 3: SUBJECT SYLLABUS TRACKER -->
+            <section id="section-subjects" class="tab-content hidden space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-violet-400"></i>
+                        <span data-i18n="syllabus_tracker">বিষয় ও অধ্যায় ট্র্যাকার</span>
+                    </h2>
+                    <button onclick="openSubjectModal()" class="text-[11px] bg-violet-600 hover:bg-violet-500 text-white px-2.5 py-1 rounded-lg flex items-center gap-1 font-semibold">
+                        <i class="fa-solid fa-plus"></i> <span data-i18n="add_chapter">অধ্যায় যোগ</span>
+                    </button>
+                </div>
+
+                <div id="subjects-container" class="space-y-3">
+                    <!-- Dynamic Subjects -->
+                </div>
+            </section>
+
+        </div> <!-- END SCROLLABLE BODY -->
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="glass-nav border-t border-indigo-900/40 px-6 py-2 flex items-center justify-around shrink-0 text-slate-400">
+            <button onclick="switchTab('routine')" class="flex flex-col items-center gap-0.5 text-[10px] focus:outline-none hover:text-indigo-400">
+                <i class="fa-solid fa-clock text-sm"></i>
+                <span data-i18n="routine">রুটিন</span>
+            </button>
+            <button onclick="switchTab('todo')" class="flex flex-col items-center gap-0.5 text-[10px] focus:outline-none hover:text-indigo-400">
+                <i class="fa-solid fa-check-double text-sm"></i>
+                <span data-i18n="todo">টু-ডু</span>
+            </button>
+            <button onclick="switchTab('subjects')" class="flex flex-col items-center gap-0.5 text-[10px] focus:outline-none hover:text-indigo-400">
+                <i class="fa-solid fa-book-bookmark text-sm"></i>
+                <span data-i18n="syllabus">সিলেবাস</span>
+            </button>
+            <button onclick="openProfileModal()" class="flex flex-col items-center gap-0.5 text-[10px] focus:outline-none hover:text-indigo-400">
+                <i class="fa-solid fa-user text-sm"></i>
+                <span data-i18n="profile">প্রোফাইল</span>
+            </button>
+        </nav>
+
+    </div> <!-- END APP WRAPPER -->
+
+    <!-- MODAL 1: EDIT PROFILE MODAL -->
+    <div id="profile-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-pen text-indigo-400"></i> <span data-i18n="edit_profile">প্রোফাইল সম্পাদন করুন</span>
+                </h3>
+                <button onclick="closeProfileModal()" class="text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="handleSaveProfile(event)" class="space-y-3">
+                <!-- Avatar Selector -->
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1" data-i18n="choose_avatar">অবতার নির্বাচন</label>
+                    <div class="flex gap-2 justify-between bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="avatar" value="fa-user-graduate" checked class="peer hidden">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-950 peer-checked:bg-indigo-600 flex items-center justify-center text-slate-200 text-sm">
+                                <i class="fa-solid fa-user-graduate"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="avatar" value="fa-laptop-code" class="peer hidden">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-950 peer-checked:bg-indigo-600 flex items-center justify-center text-slate-200 text-sm">
+                                <i class="fa-solid fa-laptop-code"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="avatar" value="fa-brain" class="peer hidden">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-950 peer-checked:bg-indigo-600 flex items-center justify-center text-slate-200 text-sm">
+                                <i class="fa-solid fa-brain"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="avatar" value="fa-rocket" class="peer hidden">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-950 peer-checked:bg-indigo-600 flex items-center justify-center text-slate-200 text-sm">
+                                <i class="fa-solid fa-rocket"></i>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="avatar" value="fa-user-ninja" class="peer hidden">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-950 peer-checked:bg-indigo-600 flex items-center justify-center text-slate-200 text-sm">
+                                <i class="fa-solid fa-user-ninja"></i>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1" data-i18n="name">আপনার নাম</label>
+                    <input type="text" id="profile-name-input" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1" data-i18n="target_goal">লক্ষ্য / টার্গেট গোল</label>
+                    <input type="text" id="profile-target-input" required class="w-full bg-slate-800 border border-slate-700 text-slate-100 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1" data-i18n="bio">বায়ো / মোটিভেশনাল বাক্য</label>
+                    <textarea id="profile-bio-input" rows="2" class="w-full bg-slate-800 border border-slate-700 text-slate-100 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeProfileModal()" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs" data-i18n="cancel">বাতিল</button>
+                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold" data-i18n="save">সংরক্ষণ করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: FUNNY NOTIFICATION MODAL -->
+    <div id="funny-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 border border-amber-500/40 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl text-center relative overflow-hidden animate-float-bounce">
+            <div class="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/50 mx-auto flex items-center justify-center text-3xl text-amber-400">
+                <i class="fa-solid fa-robot" id="funny-modal-icon"></i>
+            </div>
+            
+            <div class="space-y-1.5">
+                <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30" data-i18n="warning_tag">
+                    🚨 গুরুত্বপূর্ণ ওয়ার্নিং!
+                </span>
+                <h3 class="font-bold text-base text-slate-100" id="funny-modal-title">কাজ শেষ করো নাই কেন?</h3>
+                <p class="text-xs text-amber-200/90 leading-relaxed font-medium bg-slate-950/60 p-3 rounded-2xl border border-slate-800" id="funny-modal-msg">
+                    "পড়ালেখা না করলে পরীক্ষার হলে পেন্সিল চিবাবা!"
+                </p>
+            </div>
+
+            <button onclick="closeFunnyModal()" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs transition-all shadow-lg shadow-amber-500/20" data-i18n="i_will_study">
+                অ্যাই যাচ্ছি পড়তে! 🏃‍♂️
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 3: ADD ROUTINE MODAL -->
+    <div id="routine-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-5 space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus text-indigo-400"></i> <span data-i18n="add_routine_title">নতুন পড়ার টাস্ক</span>
+                </h3>
+                <button onclick="closeRoutineModal()" class="text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <form onsubmit="handleSaveRoutine(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1" data-i18n="subject_name">বিষয়ের নাম</label>
+                    <input type="text" id="routine-subject" placeholder="যেমন: উচ্চতর গণিত" required
+                        class="w-full bg-slate-800 border border-slate-700 text-slate-100 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1" data-i18n="topic">পড়ার বিষয়বস্তু / চ্যাপ্টার</label>
+                    <input type="text" id="routine-topic" placeholder="যেমন: অধ্যায় ৫ - অনুশীলনী" required
+                        class="w-full bg-slate-800 border border-slate-700 text-slate-100 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1" data-i18n="time">সময়</label>
+                        <input type="text" id="routine-time" placeholder="যেমন: 10:00 - 11:30" required
+                            class="w-full bg-slate-800 border border-slate-700 text-slate-100 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1" data-i18n="priority">অগ্রাধিকার</label>
+                        <select id="routine-priority" class="w-full bg-slate-800 border border-slate-700 text-slate-100 px-2 py-1.5 rounded-xl text-xs focus:outline-none">
+                            <option value="High">জরুরি (High)</option>
+                            <option value="Medium" selected>সাধারণ (Med)</option>
+                            <option value="Low">কম (Low)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeRoutineModal()" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs" data-i18n="cancel">বাতিল</button>
+                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold" data-i18n="save">সেভ করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: ADD CHAPTER MODAL -->
+    <div id="subject-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-5 space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                    <i class="fa-solid fa-folder-plus text-violet-400"></i> <span data-i18n="add_chapter_title">নতুন অধ্যায় যোগ</span>
+                </h3>
+                <button onclick="closeSubjectModal()" class="text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <form onsubmit="handleSaveSubjectChapter(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1" data-i18n="subject_name">বিষয়ের নাম</label>
+                    <input type="text" id="subject-name" placeholder="যেমন: রসায়ন ১ম পত্র" required
+                        class="w-full bg-slate-800 border border-slate-700 text-slate-100 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-violet-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1" data-i18n="chapter_name">অধ্যায়ের নাম</label>
+                    <input type="text" id="chapter-name" placeholder="যেমন: অধ্যায় ২ - গুণগত রসায়ন" required
+                        class="w-full bg-slate-800 border border-slate-700 text-slate-100 px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:border-violet-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeSubjectModal()" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl text-xs" data-i18n="cancel">বাতিল</button>
+                    <button type="submit" class="px-4 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-xs font-semibold" data-i18n="add">যোগ করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: BACKUP / DATA IMPORT EXPORT -->
+    <div id="backup-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                    <i class="fa-solid fa-database text-indigo-400"></i> <span data-i18n="backup_settings">ডাটা ব্যাকআপ ও সেটিংস</span>
+                </h3>
+                <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <div class="space-y-2">
+                <button onclick="requestNotificationPermission()" class="w-full bg-indigo-950 hover:bg-indigo-900 border border-indigo-700 text-indigo-300 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bell-ring"></i> <span data-i18n="enable_push">পুশ নোটিফিকেশন চালু করুন</span>
+                </button>
+                <button onclick="exportData()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download text-emerald-400"></i> <span data-i18n="export_json">ডাটা ব্যাকআপ ডাউনলোড (JSON)</span>
+                </button>
+                <label class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-upload text-indigo-400"></i> <span data-i18n="import_json">ডাটা রিস্টোর করুন (Import)</span>
+                    <input type="file" id="import-file-input" onchange="importData(event)" accept=".json" class="hidden">
+                </label>
+                <button onclick="clearAllData()" class="w-full bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 text-rose-300 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-trash"></i> <span data-i18n="clear_all">সমস্ত ডাটা মুছে ফেলুন</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // App Core State
+        let currentLang = 'BN';
+        let activeFilter = 'all';
+
+        let appData = {
+            profile: {
+                name: 'মোহাম্মদ সাব্বির',
+                target: 'HSC Goal GPA 5.00',
+                bio: 'নিয়মিত পড়ালেখা করে সেরা ফলাফল অর্জন করাই আমার প্রধান লক্ষ্য।',
+                avatar: 'fa-user-graduate'
+            },
+            routines: [],
+            todos: [],
+            subjects: [],
+            streak: 3,
+            pomoSessions: 0,
+            studyHours: 4.5
+        };
+
+        // Translations Data Dictionary
+        const i18n = {
+            BN: {
+                app_title: "স্টাডি ও রুটিন ট্র্যাকার",
+                phone_view: "ফোন ভিউ",
+                full_screen: "ফুল স্ক্রিন",
+                profile_summary: "প্রোফাইল সামারি",
+                edit: "এডিট",
+                completed_tasks: "সম্পন্ন কাজ",
+                study_hours: "স্টাডি টাইম",
+                streak_days: "স্ট্রিক দিন",
+                funny_reminder: "ফানি রিমাইন্ডার",
+                funny_sub: "পড়া বাকি থাকলে অ্যালার্ট আসবে!",
+                check_now: "চেক করুন",
+                daily_study_goal: "পড়ার টাস্ক প্রোগ্রেস",
+                daily_todo_goal: "দৈনন্দিন কাজ (To-Do)",
+                focus_session: "ফোকাস স্টাডি সেশন",
+                timer_hint: "২৫ মিনিট পড়াশোনা, ৫ মিনিট বিরতি",
+                start: "শুরু করুন",
+                pause: "পজ",
+                routine: "রুটিন",
+                todo: "টু-ডু",
+                syllabus: "সিলেবাস",
+                profile: "প্রোফাইল",
+                todays_routine: "আজকের পড়ার টাস্ক",
+                add: "যোগ করুন",
+                filter_all: "সব",
+                filter_pending: "বাকি",
+                filter_completed: "সম্পন্ন",
+                daily_chores: "দৈনন্দিন সাধারণ কাজ",
+                syllabus_tracker: "বিষয় ও অধ্যায় ট্র্যাকার",
+                add_chapter: "অধ্যায় যোগ",
+                edit_profile: "প্রোফাইল সম্পাদন করুন",
+                choose_avatar: "অবতার নির্বাচন",
+                name: "আপনার নাম",
+                target_goal: "লক্ষ্য / টার্গেট গোল",
+                bio: "বায়ো / মোটিভেশনাল বাক্য",
+                cancel: "বাতিল",
+                save: "সংরক্ষণ করুন",
+                warning_tag: "🚨 গুরুত্বপূর্ণ ওয়ার্নিং!",
+                i_will_study: "অ্যাই যাচ্ছি পড়তে! 🏃‍♂️",
+                add_routine_title: "নতুন পড়ার টাস্ক",
+                subject_name: "বিষয়ের নাম",
+                topic: "পড়ার বিষয়বস্তু / অধ্যায়",
+                time: "সময়",
+                priority: "অগ্রাধিকার",
+                add_chapter_title: "নতুন অধ্যায় যোগ",
+                chapter_name: "অধ্যায়ের নাম",
+                backup_settings: "ডাটা ব্যাকআপ ও সেটিংস",
+                enable_push: "পুশ নোটিফিকেশন চালু করুন",
+                export_json: "ডাটা ব্যাকআপ ডাউনলোড (JSON)",
+                import_json: "ডাটা রিস্টোর করুন (Import)",
+                clear_all: "সমস্ত ডাটা মুছে ফেলুন",
+                todo_ph: "নতুন কাজ লিখুন..."
+            },
+            EN: {
+                app_title: "Study & Routine Tracker",
+                phone_view: "Phone Shell",
+                full_screen: "Full Screen",
+                profile_summary: "Profile Summary",
+                edit: "Edit",
+                completed_tasks: "Done Tasks",
+                study_hours: "Study Hours",
+                streak_days: "Streak Days",
+                funny_reminder: "Funny Reminder",
+                funny_sub: "Get alerted if tasks remain!",
+                check_now: "Check Now",
+                daily_study_goal: "Study Tasks Progress",
+                daily_todo_goal: "Daily To-Do Progress",
+                focus_session: "Focus Study Session",
+                timer_hint: "25 mins focus, 5 mins break",
+                start: "Start",
+                pause: "Pause",
+                routine: "Routine",
+                todo: "To-Do",
+                syllabus: "Syllabus",
+                profile: "Profile",
+                todays_routine: "Today's Study Tasks",
+                add: "Add New",
+                filter_all: "All",
+                filter_pending: "Pending",
+                filter_completed: "Completed",
+                daily_chores: "Daily General Chores",
+                syllabus_tracker: "Syllabus & Chapter Tracker",
+                add_chapter: "Add Chapter",
+                edit_profile: "Edit User Profile",
+                choose_avatar: "Choose Avatar",
+                name: "Your Name",
+                target_goal: "Target Goal",
+                bio: "Bio / Motivation",
+                cancel: "Cancel",
+                save: "Save Changes",
+                warning_tag: "🚨 CRITICAL WARNING!",
+                i_will_study: "Okay, going to study now! 🏃‍♂️",
+                add_routine_title: "Add Study Task",
+                subject_name: "Subject Name",
+                topic: "Study Topic / Chapter",
+                time: "Time Range",
+                priority: "Priority",
+                add_chapter_title: "Add New Chapter",
+                chapter_name: "Chapter Title",
+                backup_settings: "Data Backup & Settings",
+                enable_push: "Enable Push Notifications",
+                export_json: "Export Backup (JSON)",
+                import_json: "Restore Data (Import)",
+                clear_all: "Clear All App Data",
+                todo_ph: "Write new task..."
+            }
+        };
+
+        // Funny Reminders Dictionary (Bilingual)
+        const funnyMessages = [
+            { icon: "fa-robot", title_bn: "ফোন দেখা বন্ধ করো!", title_en: "Stop Scrolling!", msg_bn: "🚨 পড়ালেখা না করলে পরীক্ষার হলে কি পেন্সিল চিবাবা? জলদি পড়তে বসো!", msg_en: "🚨 Routine is not for decoration! Do your study or chew pencils in exams!" },
+            { icon: "fa-face-rolling-eyes", title_bn: "বয়ামের সাজসজ্জা?", title_en: "Showpiece Routine?", msg_bn: "🐔 রুটিন কি কাঁচের বয়ামে রাখার জন্য বানাইছ? জলদি কাজ শেষ করো!", msg_en: "🐔 Is this routine just for decoration? Go tick off those pending tasks!" },
+            { icon: "fa-ghost", title_bn: "আলসেমি ছাড়ো!", title_en: "Wake Up Lazyhead!", msg_bn: "😴 অলসতা ছাড়ো! রিভিশন না দিলে পড়া সব মাথা থেকে উড়ে যাবে!", msg_en: "😴 Stop procrastinating! Your exam syllabus won't complete itself!" },
+            { icon: "fa-mobile-retro", title_bn: "রিলস বন্ধ করো!", title_en: "Close Social Media!", msg_bn: "📱 শর্টস/রিলস দেখা বন্ধ করো! অ্যাপের বাকি কাজগুলা তোমার জন্য কান্নাকাটি করতেছে!", msg_en: "📱 Close TikTok & Reels right now! Your uncompleted study goals are crying!" }
+        ];
+
+        // Timer Variables
+        let timerInterval = null;
+        let timerSeconds = 25 * 60;
+        let isTimerRunning = false;
+        let timerMode = 'work';
+
+        // Initialize App Data
+        function initData() {
+            const saved = localStorage.getItem('adv_study_tracker_v3');
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Failed to load local data", e);
+                }
+            } else {
+                appData.routines = [
+                    { id: 1, subject: 'পদার্থবিজ্ঞান', topic: 'অধ্যায় ২ - ভেক্টর ম্যাথ', time: '08:00 - 09:30', priority: 'High', completed: false },
+                    { id: 2, subject: 'English 2nd', topic: 'Grammar: Right Form of Verbs', time: '10:00 - 11:00', priority: 'Medium', completed: true }
+                ];
+                appData.todos = [
+                    { id: 1, text: '৩০ মিনিট শারীরিক ব্যায়াম', completed: true },
+                    { id: 2, text: 'পড়ার টেবিল গুছিয়ে রাখা', completed: false }
+                ];
+                appData.subjects = [
+                    {
+                        id: 'sub_1',
+                        name: 'উচ্চতর গণিত',
+                        chapters: [
+                            { id: 'ch_1', title: 'অধ্যায় ১: ম্যাট্রিক্স ও নির্ণায়ক', completed: true },
+                            { id: 'ch_2', title: 'অধ্যায় ৩: সরলরেখা', completed: false }
+                        ]
+                    }
+                ];
+                saveData();
+            }
+
+            renderAll();
+            updateLiveTime();
+            setInterval(updateLiveTime, 30000);
+        }
+
+        function saveData() {
+            localStorage.setItem('adv_study_tracker_v3', JSON.stringify(appData));
+            updateStats();
+        }
+
+        // Language Switcher Logic
+        function toggleLanguage() {
+            currentLang = currentLang === 'BN' ? 'EN' : 'BN';
+            document.getElementById('lang-indicator').innerText = currentLang === 'BN' ? 'BN / EN' : 'EN / BN';
+            applyTranslations();
+            renderRoutines();
+        }
+
+        function applyTranslations() {
+            const lang = i18n[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (lang[key]) el.innerText = lang[key];
+            });
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                const key = el.getAttribute('data-i18n-ph');
+                if (lang[key]) el.placeholder = lang[key];
+            });
+        }
+
+        // Live Clock for Phone Bar
+        function updateLiveTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('live-time').innerText = `${hours}:${minutes}`;
+        }
+
+        // View Mode Toggle
+        function setPreviewMode(mode) {
+            const wrapper = document.getElementById('app-wrapper');
+            const statusBar = document.getElementById('phone-status-bar');
+            const btnPhone = document.getElementById('btn-mode-phone');
+            const btnFull = document.getElementById('btn-mode-full');
+
+            if (mode === 'phone') {
+                wrapper.className = 'phone-frame transition-all duration-300';
+                statusBar.style.display = 'flex';
+                btnPhone.className = 'px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-all text-indigo-400 bg-indigo-950 border border-indigo-500/30';
+                btnFull.className = 'px-2.5 py-1 rounded-md text-[11px] font-medium flex items-center gap-1 transition-all text-slate-400 hover:text-slate-200';
+            } else {
+                wrapper.className = 'w-full max-w-4xl min-h-[88vh] mx-auto my-3 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col bg-[#080c14] transition-all duration-300';
+                statusBar.style.display = 'none';
+                btnFull.className = 'px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-all text-indigo-400 bg-indigo-950 border border-indigo-500/30';
+                btnPhone.className = 'px-2.5 py-1 rounded-md text-[11px] font-medium flex items-center gap-1 transition-all text-slate-400 hover:text-slate-200';
+            }
+        }
+
+        // Tab Navigation
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn flex-1 py-1.5 rounded-lg font-medium text-slate-400 transition-all text-center';
+            });
+
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            if (activeBtn) {
+                activeBtn.className = 'tab-btn flex-1 py-1.5 rounded-lg font-semibold text-indigo-400 bg-indigo-950 border border-indigo-500/30 transition-all text-center';
+            }
+        }
+
+        // Profile Functions
+        function openProfileModal() {
+            document.getElementById('profile-name-input').value = appData.profile.name;
+            document.getElementById('profile-target-input').value = appData.profile.target;
+            document.getElementById('profile-bio-input').value = appData.profile.bio;
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            const selectedAvatar = document.querySelector('input[name="avatar"]:checked').value;
+            appData.profile = {
+                name: document.getElementById('profile-name-input').value,
+                target: document.getElementById('profile-target-input').value,
+                bio: document.getElementById('profile-bio-input').value,
+                avatar: selectedAvatar
+            };
+            saveData();
+            renderProfile();
+            closeProfileModal();
+        }
+
+        function renderProfile() {
+            document.getElementById('header-user-name').innerText = appData.profile.name;
+            document.getElementById('header-user-target').innerText = appData.profile.target;
+            document.getElementById('profile-bio-text').innerText = `"${appData.profile.bio}"`;
+            document.getElementById('header-avatar').innerHTML = `<i class="fa-solid ${appData.profile.avatar}"></i>`;
+        }
+
+        // Funny Reminders & Notifications
+        function checkAndTriggerFunnyNotification(forceShow = false) {
+            const incompleteRoutines = appData.routines.filter(r => !r.completed);
+            const incompleteTodos = appData.todos.filter(t => !t.completed);
+
+            if (incompleteRoutines.length > 0 || incompleteTodos.length > 0 || forceShow) {
+                const randomMsg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+                
+                document.getElementById('funny-modal-icon').className = `fa-solid ${randomMsg.icon}`;
+                document.getElementById('funny-modal-title').innerText = currentLang === 'BN' ? randomMsg.title_bn : randomMsg.title_en;
+                document.getElementById('funny-modal-msg').innerText = currentLang === 'BN' ? randomMsg.msg_bn : randomMsg.msg_en;
+                document.getElementById('funny-modal').classList.remove('hidden');
+
+                playAlertBeep();
+
+                if ("Notification" in window && Notification.permission === "granted") {
+                    new Notification(currentLang === 'BN' ? randomMsg.title_bn : randomMsg.title_en, {
+                        body: currentLang === 'BN' ? randomMsg.msg_bn : randomMsg.msg_en,
+                        icon: "https://cdn-icons-png.flaticon.com/512/3209/3209990.png"
+                    });
+                }
+            } else {
+                alert(currentLang === 'BN' ? "🎉 সাবাশ! আপনার সব টাস্ক সম্পন্ন হয়েছে!" : "🎉 Awesome! All tasks completed!");
+            }
+        }
+
+        function closeFunnyModal() { document.getElementById('funny-modal').classList.add('hidden'); }
+
+        function playAlertBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.25);
+            } catch (e) {}
+        }
+
+        function requestNotificationPermission() {
+            if ("Notification" in window) {
+                Notification.requestPermission().then(p => {
+                    alert(p === "granted" ? "Notification Enabled!" : "Notification Disabled.");
+                });
+            }
+        }
+
+        // Stats Calculator
+        function updateStats() {
+            const rTotal = appData.routines.length;
+            const rDone = appData.routines.filter(r => r.completed).length;
+            const rPercent = rTotal === 0 ? 0 : Math.round((rDone / rTotal) * 100);
+            document.getElementById('routine-progress-percent').innerText = `${formatNumber(rPercent)}%`;
+            document.getElementById('routine-progress-bar').style.width = `${rPercent}%`;
+
+            const tTotal = appData.todos.length;
+            const tDone = appData.todos.filter(t => t.completed).length;
+            const tPercent = tTotal === 0 ? 0 : Math.round((tDone / tTotal) * 100);
+            document.getElementById('todo-progress-percent').innerText = `${formatNumber(tPercent)}%`;
+            document.getElementById('todo-progress-bar').style.width = `${tPercent}%`;
+
+            document.getElementById('streak-count').innerText = formatNumber(appData.streak || 0);
+            document.getElementById('pomo-sessions-count').innerText = `${currentLang === 'BN' ? 'সেশন' : 'Sessions'}: ${formatNumber(appData.pomoSessions || 0)}`;
+
+            document.getElementById('stat-completed-tasks').innerText = formatNumber(rDone + tDone);
+            document.getElementById('stat-study-hours').innerText = `${formatNumber(appData.studyHours || 0)} ${currentLang === 'BN' ? 'ঘঃ' : 'hrs'}`;
+            document.getElementById('stat-streak-days').innerText = `${formatNumber(appData.streak || 0)} ${currentLang === 'BN' ? 'দিন' : 'days'}`;
+        }
+
+        // Timer Logic
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSeconds / 60);
+            const s = timerSeconds % 60;
+            const formatted = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            document.getElementById('timer-display').innerText = formatNumber(formatted);
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                document.getElementById('timer-btn-text').innerText = i18n[currentLang].start;
+                document.getElementById('timer-icon').className = 'fa-solid fa-play';
+            } else {
+                isTimerRunning = true;
+                document.getElementById('timer-btn-text').innerText = i18n[currentLang].pause;
+                document.getElementById('timer-icon').className = 'fa-solid fa-pause';
+
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        if (timerMode === 'work') {
+                            appData.pomoSessions = (appData.pomoSessions || 0) + 1;
+                            appData.studyHours = parseFloat(((appData.studyHours || 0) + 0.4).toFixed(1));
+                            timerMode = 'break';
+                            timerSeconds = 5 * 60;
+                        } else {
+                            timerMode = 'work';
+                            timerSeconds = 25 * 60;
+                        }
+                        saveData();
+                        updateTimerDisplay();
+                        document.getElementById('timer-btn-text').innerText = i18n[currentLang].start;
+                        document.getElementById('timer-icon').className = 'fa-solid fa-play';
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerMode = 'work';
+            timerSeconds = 25 * 60;
+            document.getElementById('timer-btn-text').innerText = i18n[currentLang].start;
+            document.getElementById('timer-icon').className = 'fa-solid fa-play';
+            updateTimerDisplay();
+        }
+
+        // Routine Functions
+        function filterRoutine(status) {
+            activeFilter = status;
+            document.querySelectorAll('#rf-all, #rf-pending, #rf-completed').forEach(b => {
+                b.className = 'px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 border border-slate-800';
+            });
+            document.getElementById(`rf-${status}`).className = 'px-2.5 py-1 rounded-md bg-slate-800 text-slate-200 font-semibold border border-slate-700';
+            renderRoutines();
+        }
+
+        function renderRoutines() {
+            const container = document.getElementById('routine-list');
+            let items = appData.routines;
+
+            if (activeFilter === 'pending') items = items.filter(r => !r.completed);
+            if (activeFilter === 'completed') items = items.filter(r => r.completed);
+
+            if (items.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">কোনো রুটিন ডাটা নেই।</div>`;
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="glass-card rounded-xl p-2.5 px-3 flex items-center justify-between border ${item.completed ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-slate-800'}">
+                    <div class="flex items-center gap-2.5 flex-1 mr-2">
+                        <button onclick="toggleRoutine(${item.id})" class="text-base">
+                            ${item.completed ? '<i class="fa-solid fa-circle-check text-emerald-400"></i>' : '<i class="fa-regular fa-circle text-slate-600 hover:text-indigo-400"></i>'}
+                        </button>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9px] font-semibold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">${escapeHtml(item.subject)}</span>
+                                <span class="text-[8px] px-1.5 py-0.2 rounded border border-slate-700 text-slate-400">${item.priority}</span>
+                            </div>
+                            <p class="text-xs font-semibold ${item.completed ? 'line-through text-slate-500' : 'text-slate-200'} mt-0.5">${escapeHtml(item.topic)}</p>
+                            <p class="text-[10px] text-slate-400"><i class="fa-regular fa-clock text-[9px]"></i> ${escapeHtml(item.time)}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteRoutine(${item.id})" class="text-slate-600 hover:text-rose-400 px-1">
+                        <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function toggleRoutine(id) {
+            appData.routines = appData.routines.map(r => r.id === id ? { ...r, completed: !r.completed } : r);
+            saveData();
+            renderRoutines();
+        }
+
+        function deleteRoutine(id) {
+            appData.routines = appData.routines.filter(r => r.id !== id);
+            saveData();
+            renderRoutines();
+        }
+
+        function resetDailyRoutine() {
+            appData.routines = appData.routines.map(r => ({ ...r, completed: false }));
+            saveData();
+            renderRoutines();
+        }
+
+        function openRoutineModal() { document.getElementById('routine-modal').classList.remove('hidden'); }
+        function closeRoutineModal() { document.getElementById('routine-modal').classList.add('hidden'); }
+
+        function handleSaveRoutine(e) {
+            e.preventDefault();
+            appData.routines.push({
+                id: Date.now(),
+                subject: document.getElementById('routine-subject').value,
+                topic: document.getElementById('routine-topic').value,
+                time: document.getElementById('routine-time').value,
+                priority: document.getElementById('routine-priority').value,
+                completed: false
+            });
+            saveData();
+            renderRoutines();
+            closeRoutineModal();
+            e.target.reset();
+        }
+
+        // To-Do Functions
+        function renderTodos() {
+            const container = document.getElementById('todo-list');
+            if (appData.todos.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">কোনো কাজ যোগ করা হয়নি।</div>`;
+                return;
+            }
+
+            container.innerHTML = appData.todos.map(todo => `
+                <div class="glass-card rounded-xl p-2.5 px-3 flex items-center justify-between">
+                    <div class="flex items-center gap-2 flex-1 mr-2">
+                        <button onclick="toggleTodo(${todo.id})" class="text-base">
+                            ${todo.completed ? '<i class="fa-solid fa-square-check text-emerald-400"></i>' : '<i class="fa-regular fa-square text-slate-600"></i>'}
+                        </button>
+                        <span class="text-xs ${todo.completed ? 'line-through text-slate-500' : 'text-slate-200'}">${escapeHtml(todo.text)}</span>
+                    </div>
+                    <button onclick="deleteTodo(${todo.id})" class="text-slate-600 hover:text-rose-400">
+                        <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function handleAddTodo(e) {
+            e.preventDefault();
+            const input = document.getElementById('todo-input');
+            if (!input.value.trim()) return;
+
+            appData.todos.push({ id: Date.now(), text: input.value.trim(), completed: false });
+            saveData();
+            renderTodos();
+            input.value = '';
+        }
+
+        function toggleTodo(id) {
+            appData.todos = appData.todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            saveData();
+            renderTodos();
+        }
+
+        function deleteTodo(id) {
+            appData.todos = appData.todos.filter(t => t.id !== id);
+            saveData();
+            renderTodos();
+        }
+
+        // Syllabus & Chapter Functions
+        function renderSubjects() {
+            const container = document.getElementById('subjects-container');
+            if (appData.subjects.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">কোনো বিষয় যুক্ত করা হয়নি।</div>`;
+                return;
+            }
+
+            container.innerHTML = appData.subjects.map(sub => {
+                const total = sub.chapters.length;
+                const done = sub.chapters.filter(c => c.completed).length;
+                const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+
+                return `
+                    <div class="glass-card rounded-xl p-3 space-y-2 border border-slate-800">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-xs text-slate-200">${escapeHtml(sub.name)}</h3>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded">${formatNumber(percent)}%</span>
+                                <button onclick="deleteSubject('${sub.id}')" class="text-slate-600 hover:text-rose-400">
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-violet-500 h-1.5 rounded-full" style="width: ${percent}%"></div>
+                        </div>
+
+                        <div class="space-y-1 pt-1">
+                            ${sub.chapters.map(ch => `
+                                <div class="flex items-center justify-between text-xs bg-slate-900/60 p-1.5 rounded-lg">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" ${ch.completed ? 'checked' : ''} 
+                                            onchange="toggleChapter('${sub.id}', '${ch.id}')" 
+                                            class="rounded bg-slate-800 border-slate-700 text-violet-600">
+                                        <span class="${ch.completed ? 'line-through text-slate-500' : 'text-slate-300'} text-[11px]">${escapeHtml(ch.title)}</span>
+                                    </label>
+                                    <button onclick="deleteChapter('${sub.id}', '${ch.id}')" class="text-slate-600 hover:text-rose-400">
+                                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openSubjectModal() { document.getElementById('subject-modal').classList.remove('hidden'); }
+        function closeSubjectModal() { document.getElementById('subject-modal').classList.add('hidden'); }
+
+        function handleSaveSubjectChapter(e) {
+            e.preventDefault();
+            const sName = document.getElementById('subject-name').value.trim();
+            const cName = document.getElementById('chapter-name').value.trim();
+
+            let subject = appData.subjects.find(s => s.name.toLowerCase() === sName.toLowerCase());
+
+            if (!subject) {
+                subject = { id: 'sub_' + Date.now(), name: sName, chapters: [] };
+                appData.subjects.push(subject);
+            }
+
+            subject.chapters.push({ id: 'ch_' + Date.now(), title: cName, completed: false });
+            saveData();
+            renderSubjects();
+            closeSubjectModal();
+            e.target.reset();
+        }
+
+        function toggleChapter(subId, chId) {
+            const sub = appData.subjects.find(s => s.id === subId);
+            if (sub) {
+                const ch = sub.chapters.find(c => c.id === chId);
+                if (ch) { ch.completed = !ch.completed; saveData(); renderSubjects(); }
+            }
+        }
+
+        function deleteChapter(subId, chId) {
+            const sub = appData.subjects.find(s => s.id === subId);
+            if (sub) {
+                sub.chapters = sub.chapters.filter(c => c.id !== chId);
+                saveData();
+                renderSubjects();
+            }
+        }
+
+        function deleteSubject(subId) {
+            appData.subjects = appData.subjects.filter(s => s.id !== subId);
+            saveData();
+            renderSubjects();
+        }
+
+        // Backup Export / Import
+        function openBackupModal() { document.getElementById('backup-modal').classList.remove('hidden'); }
+        function closeBackupModal() { document.getElementById('backup-modal').classList.add('hidden'); }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `study_tracker_backup_${new Date().toISOString().slice(0,10)}.json`);
+            dl.click();
+        }
+
+        function importData(e) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    appData = JSON.parse(evt.target.result);
+                    saveData();
+                    renderAll();
+                    closeBackupModal();
+                } catch (err) { alert("Invalid File Format!"); }
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+
+        function clearAllData() {
+            if (confirm("Are you sure you want to delete all data?")) {
+                localStorage.removeItem('adv_study_tracker_v3');
+                location.reload();
+            }
+        }
+
+        // Helpers
+        function formatNumber(n) {
+            if (currentLang === 'EN') return n.toString();
+            const bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            return n.toString().replace(/\d/g, d => bn[d]);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+        }
+
+        function renderAll() {
+            renderProfile();
+            renderRoutines();
+            renderTodos();
+            renderSubjects();
+            updateTimerDisplay();
+            updateStats();
+            applyTranslations();
+        }
+
+        window.onload = function() {
+            initData();
+        };
+    </script>
+</body>
+</html>
